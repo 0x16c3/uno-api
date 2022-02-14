@@ -49,8 +49,8 @@ app.add_middleware(
     # we won't be storing valuable information in the session
     # so we can just define it directly
     secret_key="73D64A44613BC86E2746659BCE57F41C",
-    https_only=False,
-    same_site="lax",
+    https_only=True,
+    same_site="none",
 )
 
 limiter = Limiter(key_func=get_remote_address)
