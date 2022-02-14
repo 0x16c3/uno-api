@@ -234,7 +234,7 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-@app.websocket("/GameList/{game_id}/ws")
+@app.websocket("/ws/{game_id}")
 async def game_websocket(websocket: WebSocket, game_id: str):
     await manager.connect(websocket)
 
