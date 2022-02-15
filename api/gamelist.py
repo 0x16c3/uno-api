@@ -250,11 +250,11 @@ async def game_websocket(websocket: WebSocket, game_id: str):
         )
 
         def alive_close(result):
-            send_task.cancel(result)
+            send_task.cancel()
             manager.disconnect(websocket)
 
         def send_close(result):
-            alive_task.cancel(result)
+            alive_task.cancel()
             manager.disconnect(websocket)
 
         alive_task.add_done_callback(alive_close)
