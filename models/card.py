@@ -67,8 +67,6 @@ class Card:
         for i in range(0, 7):
             hand.append(deck.pop())
 
-        hand.append(Card(Color.JOKER, CardType.WILD))
-
         return hand, deck
 
     @staticmethod
