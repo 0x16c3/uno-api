@@ -23,8 +23,7 @@ origins = [
     "http://localhost",
     "http://localhost:8080",
     "http://localhost:3000",
-    "https://uno.vercel.app",
-    "https://web.postman.co",
+    "https://playuno.vercel.app",
 ]
 
 app = FastAPI(
