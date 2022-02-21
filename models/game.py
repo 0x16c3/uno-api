@@ -1,6 +1,6 @@
 from enum import Enum
 import random, shortuuid
-from time import time
+from datetime import datetime
 
 from models.card import Card, CardBase, CardType, Color
 
@@ -64,7 +64,7 @@ class Game:
                     self.deck.remove(card)
                     break
 
-            random.seed(int(round(time() * 1000)))
+            random.seed(int(datetime.timestamp(datetime.now())))
             random.shuffle(self.deck)
 
             for i, pid in enumerate(self.players):

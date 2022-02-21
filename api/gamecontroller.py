@@ -47,7 +47,7 @@ class GameAdvance(BaseModel):
     "/GameController/{game_id}/advance",
     response_model=GameResponse,
     responses={
-        400: BadRequestException400.model("Game is not active."),
+        400: BadRequestException400.model("Game is not active. `|` Select a color."),
         403: ForbiddenException403.model("It is not your turn. `|` Wrong color."),
         404: NotFoundException404.model("Game not found."),
     },
@@ -87,6 +87,9 @@ async def advance_game(request: Request, game_id: str, advance: GameAdvance):
                 raise ForbiddenException403.new("Wrong color.")
 
         if is_joker:
+            if advance.card.color == Color.JOKER:
+                raise BadRequestException400.new("Select a color.")
+
             game.override_color = advance.card.color
             advance.card.color = Color.JOKER
         elif advance.card.type == CardType.REVERSE:
@@ -104,7 +107,7 @@ async def advance_game(request: Request, game_id: str, advance: GameAdvance):
         game.discard, game.players[player["id"]] = Card.discard(
             game.discard, game.players[player["id"]], advance.card
         )
-        if game.override_color:
+        if game.override_color != None:
             game.discard[-1].color = game.override_color
             game.override_color = None
         game.drawed = False
