@@ -47,7 +47,9 @@ class GameAdvance(BaseModel):
     "/GameController/{game_id}/advance",
     response_model=GameResponse,
     responses={
-        400: BadRequestException400.model("Game is not active. `|` Select a color."),
+        400: BadRequestException400.model(
+            "Game is not active. `|` Select a color. `|` No more cards in deck."
+        ),
         403: ForbiddenException403.model("It is not your turn. `|` Wrong color."),
         404: NotFoundException404.model("Game not found."),
     },
@@ -66,6 +68,8 @@ async def advance_game(request: Request, game_id: str, advance: GameAdvance):
     next_player = game.get_next_player()
     last_card = game.discard[-1]
 
+    do_advance = False
+
     is_joker = (
         advance.card
         and advance.card.type
@@ -79,7 +83,8 @@ async def advance_game(request: Request, game_id: str, advance: GameAdvance):
             and not is_joker
         ) or (advance.card.color != last_card.color and not is_joker):
             if (
-                advance.card.type == CardType.NUMBER
+                advance.card.type
+                in [CardType.NUMBER, CardType.DRAW2, CardType.SKIP, CardType.REVERSE]
                 and advance.card.value == last_card.value
             ) or advance.card.color == last_card.color:
                 pass
@@ -96,10 +101,14 @@ async def advance_game(request: Request, game_id: str, advance: GameAdvance):
             game.reverse = not game.reverse
 
         if advance.card.type == CardType.DRAW2:
+            if len(game.deck) <= 2:
+                raise BadRequestException400.new("No more cards in deck.")
             game.deck, game.players[next_player] = Card.draw_n(
                 game.deck, hand=game.players[next_player], n=2
             )
         elif advance.card.type == CardType.DRAW4:
+            if len(game.deck) <= 4:
+                raise BadRequestException400.new("No more cards in deck.")
             game.deck, game.players[next_player] = Card.draw_n(
                 game.deck, hand=game.players[next_player], n=4
             )
@@ -116,16 +125,24 @@ async def advance_game(request: Request, game_id: str, advance: GameAdvance):
             game.state = GameState.FINISHED
             game_clone = game
         else:
-            game.advance_turn(skip=advance.card.type == CardType.SKIP)
+            do_advance = True
 
     else:
+        if len(game.deck) <= 1:
+            raise BadRequestException400.new("No more cards in deck.")
+
         if not game.drawed:
             card, game.deck = Card.draw(game.deck)
             game.players[player["id"]].append(card)
             game.drawed = True
         else:
             game.drawed = False
-            game.advance_turn()
+            do_advance = True
+
+    if advance.card and do_advance:
+        game.advance_turn(skip=advance.card.type == CardType.SKIP)
+    elif do_advance:
+        game.advance_turn()
 
     if game.state == GameState.FINISHED:
         GAMES.remove(game)
